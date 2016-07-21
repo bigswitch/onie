@@ -27,7 +27,7 @@ SWITCH_ASIC_VENDOR = qemu
 # The VENDOR_VERSION string is appended to the overal ONIE version
 # string.  HW vendors can use this to appended their own versioning
 # information to the base ONIE version string.
-VENDOR_VERSION = BSN1
+VENDOR_VERSION = .BSN.01
 
 # Vendor ID -- IANA Private Enterprise Number:
 # http://www.iana.org/assignments/enterprise-numbers
