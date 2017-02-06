@@ -3,9 +3,7 @@
 # Vendor's version number can be defined here.
 # Available variables are 'VENDOR_VERSION' and 'UBOOT_IDENT_STRING'.
 # e.g.,
-VENDOR_VERSION = -DNI_1.0.6
-UBOOT_VERNOR_VERSION = 3048UP V1.0.7
-UBOOT_IDENT_STRING = ONIE $(ONIE_RELEASE_TAG) - $(UBOOT_VERNOR_VERSION)
+VENDOR_VERSION = -DNI_V2.0.0
 
 SWITCH_ASIC_VENDOR = bcm
 
@@ -30,6 +28,9 @@ VENDOR_ID = 5324
 # Specify Linux kernel version
 LINUX_VERSION       = 3.2
 LINUX_MINOR_VERSION = 69
+
+KERNEL_LOAD_ADDRESS = 0x61008000
+KERNEL_ENTRY_POINT  = 0x61008000
 
 # Set the desired uClibc version
 UCLIBC_VERSION = 0.9.33.2

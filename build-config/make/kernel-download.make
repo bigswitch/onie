@@ -3,6 +3,7 @@
 #  Copyright (C) 2013,2014,2016 Curt Brune <curt@cumulusnetworks.com>
 #  Copyright (C) 2014 david_yang <david_yang@accton.com>
 #  Copyright (C) 2015 Carlos Cardenas <carlos@cumulusnetworks.com>
+#  Copyright (C) 2016 Pankaj Bansal <pankajbansal3073@gmail.com>
 #
 #  SPDX-License-Identifier:     GPL-2.0
 #
@@ -16,14 +17,14 @@
 
 LINUX_VERSION		?= 4.1
 LINUX_MAJOR_VERSION	= $(firstword $(subst ., ,$(LINUX_VERSION)))
-LINUX_MINOR_VERSION	?= 23
+LINUX_MINOR_VERSION	?= 38
 LINUX_RELEASE		?= $(LINUX_VERSION).$(LINUX_MINOR_VERSION)
 LINUX_TARBALL		?= linux-$(LINUX_RELEASE).tar.xz
 export LINUX_TARBALL
 export LINUX_RELEASE
 LINUX_TARBALL_URLS	+= $(ONIE_MIRROR) https://www.kernel.org/pub/linux/kernel/v$(LINUX_MAJOR_VERSION).x
 
-KERNEL_DOWNLOAD_STAMP	= $(DOWNLOADDIR)/kernel-download-$(LINUX_RELEASE)
+KERNEL_DOWNLOAD_STAMP	= $(DOWNLOADDIR)/kernel-$(LINUX_RELEASE)-download
 
 PHONY += kernel-download kernel-download-clean
 

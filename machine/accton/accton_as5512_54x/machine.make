@@ -7,7 +7,7 @@
 
 
 ONIE_ARCH ?= x86_64
-SWITCH_ASIC_VENDOR = bcm
+SWITCH_ASIC_VENDOR = nephos
 
 VENDOR_REV ?= 0
 
@@ -33,9 +33,6 @@ CONSOLE_DEV = 1
 # Set Linux kernel version
 LINUX_VERSION		= 3.2
 LINUX_MINOR_VERSION	= 69
-
-# Specify uClibc version
-UCLIBC_VERSION = 0.9.32.1
 
 #-------------------------------------------------------------------------------
 #

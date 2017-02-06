@@ -21,6 +21,7 @@ else
 endif
 
 EXT3_4_ENABLE = yes
+BTRFS_PROGS_ENABLE = no
 
 UBOOT_MACHINE = AS6701_32X
 KERNEL_DTB = as6701_32x.dtb
@@ -32,9 +33,6 @@ VENDOR_ID = 259
 # Set Linux kernel version
 LINUX_VERSION		= 3.2
 LINUX_MINOR_VERSION	= 69
-
-# Specify uClibc version
-UCLIBC_VERSION = 0.9.32.1
 
 #-------------------------------------------------------------------------------
 #

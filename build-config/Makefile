@@ -5,6 +5,7 @@
 #  Copyright (C) 2014,2015 Carlos Cardenas <carlos@cumulusnetworks.com>
 #  Copyright (C) 2014 david_yang <david_yang@accton.com>
 #  Copyright (C) 2014 Mandeep Sandhu <mandeep.sandhu@cyaninc.com>
+#  Copyright (C) 2016 Pankaj Bansal <pankajbansal3073@gmail.com>
 #
 #  SPDX-License-Identifier:     GPL-2.0
 #
@@ -153,6 +154,8 @@ INITRAMFSDIR	=  $(MBUILDDIR)/initramfs
 # These directories are needed per machine
 TREEDIRS     += $(STAMPDIR) $(STAGE_SYSROOT) $(INITRAMFSDIR)
 
+XTOOLS_ENABLE ?= yes
+
 ifneq (,$(MAKECMDGOALS))
   ifeq (,$(filter onie-release-tag help distclean %build-host, $(MAKECMDGOALS)))
     ifeq ($(wildcard $(MACHINEDIR)/*),)
@@ -171,6 +174,8 @@ PLATFORM  = $(ARCH)-$(MACHINE_PREFIX)
 
 ifeq ($(UBOOT_ENABLE),yes)
 	ROOTFS_ARCH = u-boot-arch
+else ifeq ($(GRUB_ENABLE),yes)
+	ROOTFS_ARCH = grub-arch
 else
 	ROOTFS_ARCH = $(ONIE_ARCH)
 endif
@@ -288,10 +293,14 @@ endif
 # Default mirror for packages needed by ONIE
 ONIE_MIRROR	?= http://mirror.opencompute.org/onie
 
-include make/crosstool-ng.make
 include make/kernel-download.make
-include make/uclibc-download.make
-include make/xtools.make
+ifeq ($(XTOOLS_ENABLE),yes)
+  include make/crosstool-ng.make
+  ifneq ($(XTOOLS_LIBC),glibc)
+    include make/uclibc-download.make
+  endif
+  include make/xtools.make
+endif
 include make/sysroot.make
 include make/kernel.make
 ifeq ($(UBOOT_ENABLE),yes)
@@ -301,11 +310,14 @@ include make/compiler.make
 include make/busybox.make
 include make/zlib.make
 include make/lzo.make
-include make/e2fsprogs.make
+include make/util-linux.make
 ifeq ($(MTDUTILS_ENABLE),yes)
   include make/mtdutils.make
 endif
 include make/dropbear.make
+ifeq ($(EXT3_4_ENABLE),yes)
+  include make/e2fsprogs.make
+endif
 ifeq ($(GPT_ENABLE),yes)
   include make/popt.make
   include make/gptfdisk.make
@@ -318,6 +330,9 @@ ifeq ($(PARTED_ENABLE),yes)
 endif
 ifeq ($(GRUB_ENABLE),yes)
   include make/grub.make
+endif
+ifeq ($(BTRFS_PROGS_ENABLE),yes)
+  include make/btrfs-progs.make
 endif
 ifeq ($(UEFI_ENABLE),yes)
   include make/efivar.make
@@ -417,7 +432,8 @@ DEBIAN_BUILD_HOST_PACKAGES	= build-essential stgit u-boot-tools util-linux \
 				  gperf device-tree-compiler python-all-dev xorriso \
 				  autoconf automake bison flex texinfo libtool libtool-bin \
 				  realpath gawk libncurses5 libncurses5-dev bc \
-				  dosfstools mtools
+				  dosfstools mtools pkg-config git wget help2man libexpat1 \
+				  libexpat1-dev fakeroot
 
 PHONY += debian-prepare-build-host
 debian-prepare-build-host:
