@@ -25,7 +25,7 @@ KERNEL_INSTALL_DEPS	+= $(KERNEL_VMLINUZ_INSTALL_STAMP) $(KERNEL_DTB_INSTALL_STAM
 
 #Toolchain Options
 XTOOLS_LIBC ?= glibc
-XTOOLS_LIBC_VERSION ?= 2.24
+XTOOLS_LIBC_VERSION ?= 2.25
 
 STRACE_ENABLE ?= yes
 
@@ -93,6 +93,8 @@ I2CTOOLS_ENABLE ?= yes
 
 # Include lvm2 tools (needed for parted)
 LVM2_ENABLE = yes
+# Currently armv8a requires a special version of lvm2
+LVM2_VERSION ?= 2_02_155
 
 # Include ethtool by default
 ETHTOOL_ENABLE ?= yes
