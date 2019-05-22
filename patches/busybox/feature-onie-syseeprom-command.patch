@@ -1,6 +1,6 @@
 Add to support onie-syseeprom command.
 
-Copyright (C) 2013 Curt Brune <curt@cumulusnetworks.com>
+Copyright (C) 2013,2018 Curt Brune <curt@cumulusnetworks.com>
 Copyright (C) 2014,2016,2017 david_yang <david_yang@accton.com>
 Copyright (C) 2015 Ellen Wang <ellen@cumulusnetworks.com>
 
@@ -428,10 +428,10 @@ index 0000000..23f7c2c
 +#endif /* _LINUX_I2C_DEV_H */
 diff --git a/include/onie_tlvinfo.h b/include/onie_tlvinfo.h
 new file mode 100644
-index 0000000..b602736
+index 0000000..23ec9c5
 --- /dev/null
 +++ b/include/onie_tlvinfo.h
-@@ -0,0 +1,172 @@
+@@ -0,0 +1,173 @@
 +/*
 + *  The Definition of the TlvInfo EEPROM format can be found at onie.org or
 + *  github.com/onie
@@ -599,6 +599,7 @@ index 0000000..b602736
 +int read_eeprom(u_int8_t *eeprom);
 +int prog_eeprom(u_int8_t * eeprom);
 +void update_eeprom_header(u_int8_t *eeprom);
++bool tlvinfo_multiple_tcode_allowed(int tcode);
 +bool tlvinfo_find_tlv(u_int8_t *eeprom, u_int8_t tcode, int *eeprom_index);
 +bool tlvinfo_delete_tlv(u_int8_t * eeprom, u_int8_t code);
 +bool tlvinfo_add_tlv(u_int8_t * eeprom, int tcode, char * strval);
@@ -926,10 +927,10 @@ index 9177818..a78273d 100644
 +lib-$(CONFIG_SYS_EEPROM_DEVICE_MTD) += sys_eeprom_mtd.o
 diff --git a/miscutils/onie_tlvinfo.c b/miscutils/onie_tlvinfo.c
 new file mode 100644
-index 0000000..5cf6463
+index 0000000..26b6ec5
 --- /dev/null
 +++ b/miscutils/onie_tlvinfo.c
-@@ -0,0 +1,743 @@
+@@ -0,0 +1,754 @@
 +#include "libbb.h"
 +#include "onie_tlvinfo.h"
 +#include "sys_eeprom.h"
@@ -1463,6 +1464,17 @@ index 0000000..5cf6463
 +}
 +
 +/*
++ *  tlvinfo_multiple_tcode_allowed
++ *
++ *  This function returns true if the supplied type code is allowed to appear
++ *  multiple times.
++ */
++bool tlvinfo_multiple_tcode_allowed(int tcode)
++{
++    return(tcode == TLV_CODE_VENDOR_EXT);
++}
++
++/*
 + *  tlvinfo_find_tlv
 + *
 + *  This function finds the TLV with the supplied code in the EERPOM.
@@ -1675,10 +1687,10 @@ index 0000000..5cf6463
 +}
 diff --git a/miscutils/sys_eeprom.c b/miscutils/sys_eeprom.c
 new file mode 100644
-index 0000000..3003bd6
+index 0000000..a24d6bb
 --- /dev/null
 +++ b/miscutils/sys_eeprom.c
-@@ -0,0 +1,181 @@
+@@ -0,0 +1,188 @@
 +#include "libbb.h"
 +#include "onie_tlvinfo.h"
 +#include <getopt.h>
@@ -1714,8 +1726,9 @@ index 0000000..3003bd6
 +	"   -g --get <code>\n"
 +	"      Look up a TLV by code and write the value to stdout.\n"
 +	"   -s --set <code>=<value>,<code>=<value>...\n"
-+	"      Set a TLV code to a value.\n"
-+	"      If no value, TLV is deleted.\n";
++	"      Set a TLV code to a value. Replaces existing TLV code, if any,\n"
++	"         except for Vendor Extension TLV code which can be added\n"
++	"         multiple times. If no value, TLV is deleted.\n";
 +
 +    fprintf(stderr, "%s", usage);
 +    exit(1);
@@ -1738,7 +1751,7 @@ index 0000000..3003bd6
 +    const size_t tlv_code_count = sizeof(tlv_code_list) /
 +	sizeof(tlv_code_list[0]);
 +
-+    char *tokens[tlv_code_count + 1];
++    char *tokens[(tlv_code_count*2) + 1];
 +    const char *short_options = "hels:g:";
 +    const struct option long_options[] = {
 +	{"help",    no_argument,          0,    'h'},
@@ -1750,10 +1763,13 @@ index 0000000..3003bd6
 +    };
 +
 +    for (i = 0; i < tlv_code_count; i++) {
-+	    tokens[i] = (char *) malloc(6);
-+	    sprintf(tokens[i], "0x%x", tlv_code_list[i].m_code);
++	    tokens[i*2] = malloc(6);
++	    snprintf(tokens[(i*2)], 6,     "0x%x", tlv_code_list[i].m_code);
++	    /* Allow for uppercase hex digits as well */
++	    tokens[(i*2) + 1] = malloc(6);
++	    snprintf(tokens[(i*2) + 1], 6, "0x%X", tlv_code_list[i].m_code);
 +    }
-+    tokens[tlv_code_count] = NULL;
++    tokens[tlv_code_count*2] = NULL;
 +
 +    while (TRUE) {
 +	c = getopt_long(argc, argv, short_options,
@@ -1794,8 +1810,10 @@ index 0000000..3003bd6
 +			    tname = tlv_code_list[i].m_name;
 +			}
 +		    }
-+		    if (tlvinfo_delete_tlv(eeprom, tcode) == TRUE) {
++		    if (!tlvinfo_multiple_tcode_allowed(tcode) || !value) {
++			if (tlvinfo_delete_tlv(eeprom, tcode) == TRUE) {
 +			    printf("Deleting TLV 0x%x: %s\n", tcode, tname);
++			}
 +		    }
 +		    if (value) {
 +			if (!tlvinfo_add_tlv(eeprom, tcode, value)) {
@@ -1856,7 +1874,8 @@ index 0000000..3003bd6
 +    }
 +syseeprom_err:
 +    for (i = 0; i < tlv_code_count; i++) {
-+	free(tokens[i]);
++	free(tokens[i*2]);
++	free(tokens[(i*2) + 1]);
 +    }
 +    return  (err == 0) ? 0 : 1;
 +}
