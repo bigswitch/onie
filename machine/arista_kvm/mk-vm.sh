@@ -7,7 +7,7 @@ set -x
 
 MEM=4096
 DISK="x86-64-arista-kvm-r0.disk"
-DISK_SIZE=1G
+DISK_SIZE=2G
 
 if [ ! -f "$DISK" ]; then
     echo "Creating disk image..."
@@ -62,8 +62,7 @@ sudo -E /usr/bin/kvm -m $MEM \
     -name "onie" \
     $bios \
     -boot $boot $cdrom \
-    -device e1000,netdev=onienet \
-    -netdev user,id=onienet,hostfwd=:0.0.0.0:3040-:22 \
+    -device e1000,netdev=net0 -netdev tap,id=net0 \
     -drive file=$DISK,media=disk,if=virtio,index=0 \
     -serial telnet:localhost:$KVM_PORT,server > $kvm_log 2>&1 &
 
